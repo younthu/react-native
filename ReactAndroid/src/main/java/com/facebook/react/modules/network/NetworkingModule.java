@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +47,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.Protocol;
 
 /**
  * Implements the XMLHttpRequest JavaScript interface.
@@ -83,6 +85,18 @@ public final class NetworkingModule extends ReactContextBaseJavaModule {
       }
       client = clientBuilder.build();
     }
+
+    // filter http2
+    List<Protocol> protocolList = new ArrayList<>();
+    protocolList.add(Protocol.SPDY_3);
+    protocolList.add(Protocol.HTTP_1_1);
+
+    OkHttpClient.Builder clientBuilder = client.newBuilder();
+    clientBuilder = clientBuilder.protocols(protocolList);
+
+    client = clientBuilder.build();
+    // ~ end of filter http2
+
     mClient = client;
     OkHttpClientProvider.replaceOkHttpClient(client);
     mCookieHandler = new ForwardingCookieHandler(reactContext);
