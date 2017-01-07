@@ -61,6 +61,7 @@ import com.facebook.react.views.webview.events.TopLoadingFinishEvent;
 import com.facebook.react.views.webview.events.TopLoadingStartEvent;
 import com.facebook.react.views.webview.events.TopMessageEvent;
 import com.facebook.react.views.webview.events.TopUrlBlockedEvent;
+import com.facebook.react.views.webview.events.TopUrlIntercepted;
 
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -129,7 +130,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
         emitFinishEvent(webView, url);
 
 
-        if(null != reactWebView.blockList && urlBlocked(url, reactWebView.blockList)) {
+        if(urlIntercept(url, reactWebView.interceptList)) {
           final String cUrl = url;
           webView.evaluateJavascript("(function(){return window.document.body.getElementsByTagName('pre')[0].innerHTML})();",
                   new ValueCallback<String>() {
@@ -142,7 +143,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
                       eventData.putString("html", html);
                       dispatchEvent(
                               webView,
-                              new TopUrlBlockedEvent(webView.getId(), eventData));
+                              new TopUrlIntercepted(webView.getId(), eventData));
                     }
                   });
         }
@@ -162,15 +163,54 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
               createWebViewEvent(webView, url)));
     }
 
-    private boolean urlBlocked(String url, ReadableArray blockList){
-      for(int i = 0; i < blockList.size();i++){
-        String pattern = blockList.getString(i);
-        // Create a Pattern object
-        Pattern r = Pattern.compile(pattern);
+    private boolean urlIntercept(String url, @Nullable ReadableArray interceptList){
+      if(null != interceptList) {
+        for (int i = 0; i < interceptList.size(); i++) {
+          String pattern = interceptList.getString(i);
+          // Create a Pattern object
+          Pattern r = Pattern.compile(pattern);
 
-        // Now create matcher object.
-        Matcher m = r.matcher(url);
-        if (m.find( )) {
+          // Now create matcher object.
+          Matcher m = r.matcher(url);
+          if (m.find()) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    private boolean urlBlocked(String url, @Nullable ReadableArray blockList, @Nullable ReadableArray whiteList){
+      if(null != blockList) {
+        for (int i = 0; i < blockList.size(); i++) {
+          String pattern = blockList.getString(i);
+          // Create a Pattern object
+          Pattern r = Pattern.compile(pattern);
+
+          // Now create matcher object.
+          Matcher m = r.matcher(url);
+          if (m.find()) {
+            return true;
+          }
+        }
+      }
+      // check white list
+      if(null != whiteList){
+        boolean matched = false;
+        for (int i = 0; i < whiteList.size(); i++) {
+          String pattern = whiteList.getString(i);
+          // Create a Pattern object
+          Pattern r = Pattern.compile(pattern);
+
+          // Now create matcher object.
+          Matcher m = r.matcher(url);
+          if (m.find()) {
+            matched =  true;
+            break;
+          }
+        }
+        if(! matched){
           return true;
         }
       }
@@ -195,7 +235,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
       ReactWebView rWebView = (ReactWebView) view;
         if (url.startsWith("http://") || url.startsWith("https://") ||
             url.startsWith("file://")) {
-          if( false && null != rWebView.blockList && urlBlocked(url, rWebView.blockList)){
+          if( urlBlocked(url, rWebView.blockList, rWebView.whiteUrlStrings)){
             // send message
 
             WritableMap eventData = createWebViewEvent(view, url);
@@ -277,6 +317,8 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
     protected @Nullable ReactWebViewClient mReactWebViewClient;
 
     private @Nullable ReadableArray blockList; // for url blocking
+    private @Nullable ReadableArray whiteUrlStrings;
+    private @Nullable ReadableArray interceptList;
 
     protected class ReactWebViewBridge {
       ReactWebView mContext;
@@ -463,7 +505,16 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
   public void setBlockList(WebView view, @Nullable ReadableArray blockList){
     ((ReactWebView)view).blockList = blockList;
   }
-    
+
+  @ReactProp(name = "interceptList")
+  public void setInterceptList(WebView view, @Nullable ReadableArray interceptList){
+    ((ReactWebView)view).interceptList = interceptList;
+  }
+  @ReactProp(name = "whiteUrlStrings")
+  public void setWhiteUrlStrings(WebView view, @Nullable ReadableArray blockList){
+    ((ReactWebView)view).whiteUrlStrings = blockList;
+  }
+
   @ReactProp(name = "scalesPageToFit")
   public void setScalesPageToFit(WebView view, boolean enabled) {
     view.getSettings().setUseWideViewPort(!enabled);
