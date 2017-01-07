@@ -79,6 +79,7 @@ import com.facebook.react.uimanager.events.TouchEventType;
         .put("topSelectionChange", MapBuilder.of("registrationName", "onSelectionChange"))
         .put("topMessage", MapBuilder.of("registrationName", "onMessage"))
             .put("topUrlBlockedEvent", MapBuilder.of("registrationName", "onUrlBlocked"))
+            .put("topUrlIntercepted", MapBuilder.of("registrationName", "onUrlIntercepted"))
         .build();
   }
 

@@ -58,11 +58,14 @@ class WebView extends React.Component {
     onNavigationStateChange: PropTypes.func,
     onMessage: PropTypes.func,
     onUrlBlocked: PropTypes.func,
+    onUrlIntercepted: PropTypes.func,
     onContentSizeChange: PropTypes.func,
     startInLoadingState: PropTypes.bool, // force WebView to show loadingView on first load
     style: View.propTypes.style,
 
     blockList: PropTypes.array,
+    interceptList: PropTypes.array,
+    whiteUrlStrings: PropTypes.array,
 
     html: deprecatedPropType(
       PropTypes.string,
@@ -230,7 +233,10 @@ class WebView extends React.Component {
         onLoadingError={this.onLoadingError}
         testID={this.props.testID}
         blockList = {this.props.blockList}
+        interceptList = {this.props.interceptList}
+        whiteUrlStrings = {this.props.whiteUrlStrings}
         onUrlBlocked = {this.onUrlBlocked}
+        onUrlIntercepted={this.onUrlIntercepted}
         mediaPlaybackRequiresUserAction={this.props.mediaPlaybackRequiresUserAction}
       />;
 
@@ -306,6 +312,11 @@ class WebView extends React.Component {
     var _onUrlBlocked = this.props.onUrlBlocked;
     _onUrlBlocked && _onUrlBlocked(event);
   };
+
+  onUrlIntercepted = (event) => {
+    var _onUrlIntercepted = this.props.onUrlIntercepted;
+    _onUrlIntercepted && _onUrlIntercepted(event);
+  }
 
   onLoadingError = (event) => {
     event.persist(); // persist this event because we need to store it
