@@ -137,7 +137,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
               createWebViewEvent(webView, url)));
     }
 
-    private boolean urlBlocked(String url, @Nullable ReadableArray blockList, @Nullable ReadableArray whiteList){
+    private boolean urlBlocked(String url, @Nullable ReadableArray blockList ){
       if(null != blockList) {
         for (int i = 0; i < blockList.size(); i++) {
           String pattern = blockList.getString(i);
@@ -159,7 +159,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
       ReactWebView rWebView = (ReactWebView) view;
         if (url.startsWith("http://") || url.startsWith("https://") ||
             url.startsWith("file://")) {
-          if( urlBlocked(url, rWebView.blockList, rWebView.whiteUrlStrings)){
+          if( urlBlocked(url, rWebView.blockList )){
 
             WritableMap eventData = createWebViewEvent(view, url);
 
